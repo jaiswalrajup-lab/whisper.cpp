@@ -1,21 +1,27 @@
 FROM ubuntu:22.04
 
+# Install dependencies
 RUN apt-get update && apt-get install -y \
-    git cmake build-essential curl
+    git \
+    cmake \
+    build-essential \
+    curl \
+    bash
 
+# Working directory
 WORKDIR /app
 
+# Copy project
 COPY . .
 
+# Build whisper.cpp
 RUN cmake -B build && cmake --build build -j
 
+# Make script executable
+RUN chmod +x start.sh
+
+# Expose port (Render will override with $PORT internally if needed)
 EXPOSE 10000
 
-CMD bash -c '\
-mkdir -p models && \
-if [ ! -f models/ggml-base.en.bin ]; then \
-  echo "Downloading model..." && \
-  curl -L -o models/ggml-base.en.bin \
-  https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin ; \
-fi && \
-exec ./build/bin/whisper-server --host 0.0.0.0 --port 10000 --model models/ggml-base.en.bin'
+# Start using script
+CMD ["bash", "start.sh"]
