@@ -9,7 +9,7 @@ COPY . .
 
 RUN cmake -B build && cmake --build build -j
 
-# Create models folder + download model at build time
+# FORCE model download at build time
 RUN mkdir -p models && \
     curl -L -o models/ggml-base.en.bin \
     https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
