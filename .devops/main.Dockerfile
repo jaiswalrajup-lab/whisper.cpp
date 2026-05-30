@@ -1,20 +1,19 @@
-FROM ubuntu:22.04 AS build
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    git cmake build-essential curl
+
 WORKDIR /app
 
-RUN apt-get update && \
-  apt-get install -y build-essential wget cmake git \
-  && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+COPY . .
 
-COPY .. .
-RUN make base.en
+RUN cmake -B build && cmake --build build -j
 
-FROM ubuntu:22.04 AS runtime
-WORKDIR /app
+# Create models folder + download model at build time
+RUN mkdir -p models && \
+    curl -L -o models/ggml-base.en.bin \
+    https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
 
-RUN apt-get update && \
-  apt-get install -y curl ffmpeg libsdl2-dev wget cmake git \
-  && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+EXPOSE 10000
 
-COPY --from=build /app /app
-ENV PATH=/app/build/bin:$PATH
-ENTRYPOINT [ "bash", "-c" ]
+CMD ["./build/bin/whisper-server", "--host", "0.0.0.0", "--port", "10000", "--model", "models/ggml-base.en.bin"]
