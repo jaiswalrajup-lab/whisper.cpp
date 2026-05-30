@@ -2,19 +2,27 @@
 
 set -e
 
-mkdir -p models
+BASE_DIR="/app"
+MODEL_DIR="$BASE_DIR/models"
+MODEL_PATH="$MODEL_DIR/ggml-base.en.bin"
 
-MODEL_PATH="models/ggml-base.en.bin"
+mkdir -p "$MODEL_DIR"
 
-# Download ONLY if missing
+echo "Checking model..."
+
 if [ ! -f "$MODEL_PATH" ]; then
-  echo "Downloading Whisper model..."
-  curl -L --retry 5 --retry-delay 2 \
+  echo "Downloading model..."
+  curl -L --retry 5 \
   -o "$MODEL_PATH" \
   https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
 fi
 
-echo "Model ready. Starting server..."
+echo "Model path: $MODEL_PATH"
+ls -lh "$MODEL_DIR"
+
+echo "Starting server..."
+
+cd "$BASE_DIR"
 
 exec ./build/bin/whisper-server \
   --host 0.0.0.0 \
