@@ -9,11 +9,13 @@ COPY . .
 
 RUN cmake -B build && cmake --build build -j
 
-# FORCE model download at build time
-RUN mkdir -p models && \
-    curl -L -o models/ggml-base.en.bin \
-    https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
-
 EXPOSE 10000
 
-CMD ["./build/bin/whisper-server", "--host", "0.0.0.0", "--port", "10000", "--model", "models/ggml-base.en.bin"]
+CMD bash -c '\
+mkdir -p models && \
+if [ ! -f models/ggml-base.en.bin ]; then \
+  echo "Downloading model..." && \
+  curl -L -o models/ggml-base.en.bin \
+  https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin ; \
+fi && \
+exec ./build/bin/whisper-server --host 0.0.0.0 --port 10000 --model models/ggml-base.en.bin'
